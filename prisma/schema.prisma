@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OpportunityStage {
+  SIGNAL
+  QUALIFIED
+  DATA_AUTHORIZED
+  PRICING
+  PROPOSAL
+  CONTRACT_REVIEW
+  ENROLLMENT
+  SWITCHED
+  ACTIVE
+  RENEWAL
+  LOST
+}
+
+enum GateStatus {
+  PENDING
+  PASS
+  BLOCKED
+  REVIEW
+}
+
+model Account {
+  id            String        @id @default(cuid())
+  name          String
+  legalName     String?
+  website       String?
+  industry      String?
+  createdAt     DateTime      @default(now())
+  sites         Site[]
+  contacts      Contact[]
+  opportunities Opportunity[]
+}
+
+model Site {
+  id            String        @id @default(cuid())
+  accountId     String
+  account       Account       @relation(fields: [accountId], references: [id])
+  address1      String
+  city          String
+  state         String
+  postalCode    String
+  utility       String?
+  market        String?
+  meterCount    Int           @default(1)
+  annualKwh     Decimal?
+  opportunities Opportunity[]
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  name      String
+  email     String?
+  phone     String?
+  title     String?
+  consentAt DateTime?
+}
+
+model Opportunity {
+  id            String           @id @default(cuid())
+  accountId     String
+  siteId        String
+  account       Account          @relation(fields: [accountId], references: [id])
+  site          Site             @relation(fields: [siteId], references: [id])
+  stage         OpportunityStage @default(SIGNAL)
+  annualKwh     Decimal?
+  expectedGross Decimal?
+  probability   Float            @default(0)
+  renewalDate   DateTime?
+  quotes        Quote[]
+  gates         PolicyGate[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model Supplier {
+  id       String  @id @default(cuid())
+  name     String
+  status   String  @default("PROSPECT")
+  markets  Json
+  products Json
+  apiReady Boolean @default(false)
+  quotes   Quote[]
+}
+
+model Quote {
+  id            String      @id @default(cuid())
+  opportunityId String
+  supplierId    String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id])
+  supplier      Supplier    @relation(fields: [supplierId], references: [id])
+  product       String
+  termMonths    Int
+  price         Decimal?
+  priceUnit     String?
+  margin        Decimal?
+  expectedGross Decimal?
+  sourceRef     String?
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
+}
+
+model PolicyGate {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id])
+  key           String
+  status        GateStatus  @default(PENDING)
+  reason        String?
+  evidence      Json?
+  evaluatedAt   DateTime    @default(now())
+}
+
+model AgentRun {
+  id               String   @id @default(cuid())
+  agent            String
+  objective        String
+  status           String
+  input            Json?
+  output           Json?
+  toolTrace        Json?
+  riskClass        String?
+  approvalRequired Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  finishedAt       DateTime?
+}
+
+model AuditEvent {
+  id           String   @id @default(cuid())
+  actorType    String
+  actorId      String?
+  action       String
+  resourceType String
+  resourceId   String?
+  decision     String?
+  evidence     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([resourceType, resourceId])
+}
+
+model CommissionLedger {
+  id            String   @id @default(cuid())
+  opportunityId String
+  supplierId    String
+  periodStart   DateTime
+  periodEnd     DateTime
+  expected      Decimal
+  received      Decimal  @default(0)
+  variance      Decimal  @default(0)
+  sourceRef     String?
+  createdAt     DateTime @default(now())
+}
