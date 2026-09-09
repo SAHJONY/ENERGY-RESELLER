@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { Bot, Gauge, LayoutDashboard, Network, ShieldCheck, TrendingUp, Users, Zap } from 'lucide-react';
+import { Bot, Droplets, Gauge, LayoutDashboard, Network, ShieldCheck, TrendingUp, Users, Zap } from 'lucide-react';
 
 const nav = [
   ['/', 'Command Center', LayoutDashboard],
+  ['/crude-oil', 'Crude Oil Brokerage', Droplets],
   ['/crm', 'Revenue CRM', Users],
   ['/quotes', 'Quote Engine', TrendingUp],
   ['/suppliers', 'Supplier Network', Network],
@@ -18,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="side">
         <div className="brand">
           <div className="mark">ER</div>
-          <div><b>SAHJONY ENERGY</b><small>Autonomous Reseller OS</small></div>
+          <div><b>SAHJONY ENERGY</b><small>Energy Department · Autonomous Reseller OS</small></div>
         </div>
         <nav className="nav">
           {nav.map(([href, label, Icon]) => <Link key={href} href={href}><Icon size={16}/>{label}</Link>)}
